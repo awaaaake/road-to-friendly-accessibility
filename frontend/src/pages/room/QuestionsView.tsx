@@ -1,18 +1,13 @@
 import { css, keyframes } from '@emotion/react';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
+import { useAnnouncer } from '@/hooks/useAnnouncer';
+
 import ClockIcon from '@/assets/icons/clock.svg?react';
 import { QuestionInput } from '@/components';
 import { MAX_LONG_RADIUS } from '@/constants/radius';
 import { useToast } from '@/hooks';
-import {
-  useParticipantsStore,
-  useQuestionsStore,
-  useSocketStore,
-  useKeywordsStore,
-  useRadiusStore,
-  useAccessibilityStore
-} from '@/stores/';
+import { useParticipantsStore, useQuestionsStore, useSocketStore, useKeywordsStore, useRadiusStore } from '@/stores/';
 import { flexStyle, Variables, fadeIn, fadeOut } from '@/styles';
 import { Question, CommonResult } from '@/types';
 import { getRemainingSeconds } from '@/utils';
@@ -39,7 +34,7 @@ const QuestionsView = ({
   const { setParticipants } = useParticipantsStore();
   const { openToast } = useToast();
   const { setOutOfBounds } = useRadiusStore();
-  const { announceToScreenReader } = useAccessibilityStore();
+  const { announceToScreenReader } = useAnnouncer();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -154,7 +149,7 @@ const QuestionsView = ({
 
           finishResultLoading();
           setOutOfBounds(false); //사용자 ui 원위치로
-          announceToScreenReader('통계 분석이 완료되었습니다. 결과를 확인하세요.');
+          announceToScreenReader('통계 분석이 완료되었습니다. 결과를 확인하세요.', 'polite');
           socket?.off('empathy:result', handleResult);
         }, 3000);
       }

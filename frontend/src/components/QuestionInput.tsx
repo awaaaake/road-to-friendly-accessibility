@@ -1,9 +1,11 @@
 import { css } from '@emotion/react';
 import { useState } from 'react';
 
+import { useAnnouncer } from '@/hooks/useAnnouncer';
+
 import { useToast } from '@/hooks';
 import { sendPickKeywordMessage, sendReleaseKeywordMessage } from '@/services';
-import { useAccessibilityStore, useSocketStore } from '@/stores';
+import { useSocketStore } from '@/stores';
 import { Variables } from '@/styles';
 
 interface QuestionInputProps {
@@ -16,7 +18,7 @@ const QuestionInput = ({ currentQuestionIndex, selectedKeywords, onSubmit }: Que
   const [keyword, setKeyword] = useState('');
   const { openToast } = useToast();
   const { socket } = useSocketStore();
-  const { announceToScreenReader } = useAccessibilityStore();
+  const { announceToScreenReader } = useAnnouncer();
   const MAX_LENGTH = 15;
 
   async function handleEnter(e: React.KeyboardEvent) {
