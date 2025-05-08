@@ -5,7 +5,14 @@ import ClockIcon from '@/assets/icons/clock.svg?react';
 import { QuestionInput } from '@/components';
 import { MAX_LONG_RADIUS } from '@/constants/radius';
 import { useToast } from '@/hooks';
-import { useParticipantsStore, useQuestionsStore, useSocketStore, useKeywordsStore, useRadiusStore } from '@/stores/';
+import {
+  useParticipantsStore,
+  useQuestionsStore,
+  useSocketStore,
+  useKeywordsStore,
+  useRadiusStore,
+  useAccessibilityStore
+} from '@/stores/';
 import { flexStyle, Variables, fadeIn, fadeOut } from '@/styles';
 import { Question, CommonResult } from '@/types';
 import { getRemainingSeconds } from '@/utils';
@@ -32,6 +39,7 @@ const QuestionsView = ({
   const { setParticipants } = useParticipantsStore();
   const { openToast } = useToast();
   const { setOutOfBounds } = useRadiusStore();
+  const { announceToScreenReader } = useAccessibilityStore();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -103,6 +111,8 @@ const QuestionsView = ({
       socket.on('empathy:start', (response: { questions: Question[] }) => {
         setQuestions(response.questions);
         onQuestionStart();
+        announceToScreenReader(`첫 번째 질문입니다. Q1 ${response.questions[0].title}`, 'polite');
+
         if (response.questions.length > 0) {
           const firstQuestionTimeLeft = getRemainingSeconds(new Date(response.questions[0].expirationTime), new Date());
           setTimeLeft(firstQuestionTimeLeft);
@@ -137,11 +147,14 @@ const QuestionsView = ({
               setParticipants((prev) => ({ ...prev, [userId]: { ...prev[userId], keywords: array } }));
             });
           } else {
-            openToast({ type: 'error', text: '통계 분석 중 오류가 발생했습니다. 다시 시도해주세요' });
+            const msg = '통계 분석 중 오류가 발생했습니다. 다시 시도해주세요';
+            openToast({ type: 'error', text: msg });
+            announceToScreenReader(msg, 'assertive');
           }
 
           finishResultLoading();
           setOutOfBounds(false); //사용자 ui 원위치로
+          announceToScreenReader('통계 분석이 완료되었습니다. 결과를 확인하세요.');
           socket?.off('empathy:result', handleResult);
         }, 3000);
       }
@@ -152,6 +165,9 @@ const QuestionsView = ({
     resetSelectedKeywords(); // 새 질문으로 전환되면 선택된 키워드 초기화
 
     if (questions.length > 0 && currentQuestionIndex < questions.length) {
+      const newQuestion = questions[currentQuestionIndex];
+      announceToScreenReader(`새 질문으로 전환됩니다. Q${currentQuestionIndex + 2} ${newQuestion.title}`, 'polite');
+
       const nextTimeLeft = getRemainingSeconds(new Date(questions[currentQuestionIndex].expirationTime), new Date());
       setInitialTimeLeft(nextTimeLeft);
       setTimeLeft(nextTimeLeft);
