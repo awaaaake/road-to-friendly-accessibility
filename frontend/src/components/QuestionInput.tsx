@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { useToast } from '@/hooks';
 import { sendPickKeywordMessage, sendReleaseKeywordMessage } from '@/services';
-import { useSocketStore } from '@/stores';
+import { useAccessibilityStore, useSocketStore } from '@/stores';
 import { Variables } from '@/styles';
 
 interface QuestionInputProps {
@@ -16,13 +16,16 @@ const QuestionInput = ({ currentQuestionIndex, selectedKeywords, onSubmit }: Que
   const [keyword, setKeyword] = useState('');
   const { openToast } = useToast();
   const { socket } = useSocketStore();
+  const { announceToScreenReader } = useAccessibilityStore();
   const MAX_LENGTH = 15;
 
   async function handleEnter(e: React.KeyboardEvent) {
     if (e.code !== 'Enter') return;
 
     if (keyword.length === 0) {
-      openToast({ type: 'error', text: '답변이 비어있어요! 입력 후 Enter를 눌러주세요.' });
+      const msg = '답변이 비어있어요! 입력 후 Enter를 눌러주세요.';
+      openToast({ type: 'error', text: msg });
+      announceToScreenReader(msg, 'assertive');
       return;
     }
 
@@ -31,16 +34,24 @@ const QuestionInput = ({ currentQuestionIndex, selectedKeywords, onSubmit }: Que
         if (!selectedKeywords.has(keyword)) {
           await sendPickKeywordMessage(socket, currentQuestionIndex + 1, keyword); // 서버에 키워드 추가 요청
           openToast({ text: '답변을 제출했어요!', type: 'check' });
+
+          //스크린리더용 알림 메시지
+          announceToScreenReader(`키워드 "${keyword}가 선택되었습니다. 공감이 등록되었습니다.`, 'polite');
+
           setKeyword('');
           onSubmit(keyword, 'add'); // 내가 선택한 키워드에 추가
         } else {
           await sendReleaseKeywordMessage(socket, currentQuestionIndex + 1, keyword); // 서버에 키워드 공감 취소 요청
           openToast({ text: '해당 키워드에 대해 공감을 취소했어요', type: 'check' });
+
+          announceToScreenReader(`키워드 "${keyword}"에 대한 공감이 취소되었습니다.`, 'polite');
+
           setKeyword('');
           onSubmit(keyword, 'delete');
         }
       } catch (error) {
         if (error instanceof Error) openToast({ text: error.message, type: 'error' });
+        announceToScreenReader(`오류가 발생했습니다: ${error.message}`, 'assertive');
       }
     }
   }
@@ -51,9 +62,17 @@ const QuestionInput = ({ currentQuestionIndex, selectedKeywords, onSubmit }: Que
     // 입력 길이가 최대 길이를 초과하면 자름
     if (value.length > MAX_LENGTH) {
       setKeyword(value.slice(0, MAX_LENGTH));
+      announceToScreenReader(`최대 글자 수 ${MAX_LENGTH}자에 도달했습니다.`, 'polite');
     } else {
       setKeyword(value);
     }
+  };
+
+  const handleFocus = () => {
+    announceToScreenReader(
+      `키워드 입력창입니다. 최대${MAX_LENGTH}자까지 입력 가능합니다. 입력 후 엔터키를 누르세요.`,
+      'polite'
+    );
   };
 
   return (
@@ -66,6 +85,7 @@ const QuestionInput = ({ currentQuestionIndex, selectedKeywords, onSubmit }: Que
         maxLength={MAX_LENGTH}
         onChange={handleInputChange}
         onKeyDown={(e) => handleEnter(e)}
+        onFocus={handleFocus}
       />
       <span css={spanStyle}>{keyword.length}/15</span>
     </div>
