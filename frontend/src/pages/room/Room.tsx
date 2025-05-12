@@ -39,7 +39,7 @@ const Room = () => {
 
   const { participants, hostId, currentUserId, roomExists } = useParticipants(roomId, finishInitialLoading);
   const { radius, setRadius, increaseRadius, increaseLongRadius, setOutOfBounds } = useRadiusStore();
-  useCheckRoomAccess();
+  // useCheckRoomAccess();
 
   useBeforeUnload((e) => {
     if (!isIntroViewActive) {

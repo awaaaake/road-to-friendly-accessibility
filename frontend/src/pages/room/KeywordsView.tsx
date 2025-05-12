@@ -259,15 +259,16 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
 
       const dx = coord.x - currentCoord.x;
       const dy = coord.y - currentCoord.y;
+      const THRESHOLD = 50;
 
       const isValid =
-        (key === 'ArrowRight' && dx > 0 && Math.abs(dy) < 50) ||
-        (key === 'ArrowLeft' && dx < 0 && Math.abs(dy) < 50) ||
-        (key === 'ArrowUp' && dy < 0 && Math.abs(dx) < 50) ||
-        (key === 'ArrowDown' && dy > 0 && Math.abs(dx) < 50);
+        (key === 'ArrowRight' && dx > 0 && Math.abs(dy) < THRESHOLD) ||
+        (key === 'ArrowLeft' && dx < 0 && Math.abs(dy) < THRESHOLD) ||
+        (key === 'ArrowUp' && dy < 0 && Math.abs(dx) < THRESHOLD) ||
+        (key === 'ArrowDown' && dy > 0 && Math.abs(dx) < THRESHOLD);
 
       if (isValid) {
-        const dist = dx * dx + dy * dy; //두좌표 사이 거리
+        const dist = Math.sqrt(dx * dx + dy * dy); //두좌표 사이 거리
         if (dist < minDistance) {
           minDistance = dist;
           closestKeyword = keyword;
@@ -277,6 +278,7 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
 
     if (closestKeyword) {
       //가장 가까운 키워드에 포커스 호출
+      console.log(closestKeyword);
       keywordRefs.current[closestKeyword]?.focus();
     }
   };
@@ -285,14 +287,17 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
     <div css={KeywordsViewContainer}>
       <div css={HiddenKeywordsContainer} ref={containerRef}></div>
       <div
+        tabIndex={0}
         css={RealKeywordsContainer}
-        role="키워드 영역"
+        role="region"
         aria-label="워드 클라우드 영역, 키워드를 선택해 공감할 수 있습니다"
       >
         {Object.keys(keywordsCoordinates).map((keyword) => {
           const keywordObject: Keyword = { keyword, count: keywordsCoordinates[keyword].count };
           return (
             <div
+              role="button"
+              tabIndex={0}
               key={`${questionId}-${keyword}`}
               css={[
                 KeywordStyle,
@@ -311,6 +316,7 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
 
                 if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                   e.preventDefault();
+                  console.log(e.key);
                   handleArrowNavigation(e.key, keyword);
                 }
               }}
@@ -318,7 +324,6 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
                 left: keywordsCoordinates[keyword].x,
                 top: keywordsCoordinates[keyword].y
               }}
-              role="버튼"
               ref={(el) => (keywordRefs.current[keyword] = el)}
               aria-pressed={selectedKeywords.has(keyword)}
               aria-label={`${keywordObject.keyword}, 공감 ${keywordObject.count}회`}
