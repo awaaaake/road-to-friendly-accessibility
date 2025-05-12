@@ -28,6 +28,7 @@ https://road-to-friendly.kro.kr/
 </div>
 </div>
 <br/>
+<br/>
 
 ## 소개
 본 레포지토리는 [roadtofriendly](https://github.com/boostcampwm-2024/web11-road_to_friendly)의 웹 접근성 개선 프로젝트를 기반으로, 스크린 리더 구현 기능을 추가 확장한 프로젝트입니다.
@@ -39,9 +40,8 @@ https://road-to-friendly.kro.kr/
 
 스크린 리더 사용자도 실시간 활동에 참여하고 있다는 느낌을 받을 수 있도록, `aria-live`를 활용해 정보 변화 알림을 제공하고, 알림 트리거 방식, 알림 빈도, 우선순위(`polite` / `assertive`)를 조절, 포커싱 처리 등 다양한 설계 고민을 거쳐 구현했습니다.  
 
-👉 알림 전달 시점과 방식에 대한 UX 고민<br/>
-👉 `aria-live`를 안정적으로 적용하기 위한 라이브 리전 구조 설계 (`Context + Ref`)<br/>
-👉 시간 경과, 질문 전환, 키워드 선택 등 다양한 맥락에서 알림 우선순위 조정<br/>
-👉 키보드 사용자와 스크린 리더 사용자 모두를 고려한 키워드 인터랙션 구현<br/>
-
-🔊 [스크린리더를 구현해보자](https://www.notion.so/1f157172b71f8077acf6d4680d901c55?pvs=4)
+> 알림 전달 시점과 방식에 대한 UX 고민<br/>
+`aria-live`를 안정적으로 적용하기 위한 라이브 리전 구조 설계 (`Context + Ref`)<br/>
+시간 경과, 질문 전환, 키워드 선택 등 다양한 맥락에서 알림 우선순위 조정<br/>
+키보드 사용자와 스크린 리더 사용자 모두를 고려한 키워드 인터랙션 구현<br/><br/>
+[🔊 스크린리더를 구현해보자](https://www.notion.so/1f157172b71f8077acf6d4680d901c55?pvs=4)
