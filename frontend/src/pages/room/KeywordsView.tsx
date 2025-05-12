@@ -1,6 +1,8 @@
 import { css } from '@emotion/react';
 import { memo, useEffect, useRef, useState } from 'react';
 
+import { useAnnouncer } from '@/hooks/useAnnouncer';
+
 import { BIG_THRESHOLD, MIDEIUM_THRESHOLD, SMALL_THRESHOLD } from '@/constants/radius';
 import { useToast } from '@/hooks';
 import { sendPickKeywordMessage, sendReleaseKeywordMessage } from '@/services';
@@ -43,6 +45,7 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
   const { keywords, prefixSumMap, upsertMultipleKeywords } = useKeywordsStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const [keywordsCoordinates, setKeywordsCoordinates] = useState<KeywordsCoordinates>({});
+  const { announceToScreenReader } = useAnnouncer();
 
   useEffect(() => {
     const keywordQueue: Map<string, Keyword> = new Map<string, Keyword>();
@@ -220,9 +223,12 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
     try {
       await sendPickKeywordMessage(socket, questionId, keyword); // 서버에 키워드 공감 요청
       updateSelectedKeywords(keyword, 'add');
-      openToast({ text: '키워드에 공감을 표시했어요!', type: 'check' });
+      const msg = '키워드에 공감을 표시했어요!';
+      openToast({ text: msg, type: 'check' });
+      announceToScreenReader(msg, 'polite');
     } catch (error) {
       if (error instanceof Error) openToast({ text: error.message, type: 'error' });
+      announceToScreenReader(error.message, 'assertive');
     }
   };
 
@@ -231,16 +237,23 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
     try {
       await sendReleaseKeywordMessage(socket, questionId, keyword); // 서버에 키워드 공감 취소 요청
       updateSelectedKeywords(keyword, 'delete');
-      openToast({ text: '키워드 공감을 취소했어요', type: 'check' });
+      const msg = '키워드 공감을 취소했어요';
+      openToast({ text: msg, type: 'check' });
+      announceToScreenReader(msg, 'polite');
     } catch (error) {
       if (error instanceof Error) openToast({ text: error.message, type: 'error' });
+      announceToScreenReader(error.message, 'assertive');
     }
   };
 
   return (
     <div css={KeywordsViewContainer}>
       <div css={HiddenKeywordsContainer} ref={containerRef}></div>
-      <div css={RealKeywordsContainer}>
+      <div
+        css={RealKeywordsContainer}
+        role="키워드 영역"
+        aria-label="워드 클라우드 영역, 키워드를 선택해 공감할 수 있습니다"
+      >
         {Object.keys(keywordsCoordinates).map((keyword) => {
           const keywordObject: Keyword = { keyword, count: keywordsCoordinates[keyword].count };
           return (
@@ -255,10 +268,20 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
               onClick={() => {
                 selectedKeywords.has(keyword) ? unpickKeyword(keyword) : pickKeyword(keyword);
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  selectedKeywords.has(keyword) ? unpickKeyword(keyword) : pickKeyword(keyword);
+                }
+              }}
               style={{
                 left: keywordsCoordinates[keyword].x,
                 top: keywordsCoordinates[keyword].y
               }}
+              role="버튼"
+              tabIndex={0}
+              aria-pressed={selectedKeywords.has(keyword)}
+              aria-label={`${keywordObject.keyword}, 공감 ${keywordObject.count}회`}
             >
               {keywordObject.keyword}
             </div>
