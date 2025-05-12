@@ -95,6 +95,12 @@ const QuestionsView = ({
       setIsQuestionMovedUp(false);
       setShowInput(false);
     }
+
+    //접근성 처리
+    let message = '';
+    if (timeLeft === 60) message = '60초 남았습니다';
+    else if (timeLeft === 10) message = '10초 남았습니다';
+    announceToScreenReader(message, 'assertive');
   }, [timeLeft]);
 
   useEffect(() => {
@@ -211,6 +217,11 @@ const QuestionsView = ({
                   value={initialTimeLeft > 0 ? (timeLeft / initialTimeLeft) * 100 : 100}
                   max={100}
                   css={progressBarStyle}
+                  role="프로그래스바"
+                  aria-valuenow={initialTimeLeft > 0 ? (timeLeft / initialTimeLeft) * 100 : 100}
+                  aria-valuemax={100}
+                  aria-valuemin={0}
+                  aria-label="질문 시간 진행률"
                 />
               </div>
             </div>
