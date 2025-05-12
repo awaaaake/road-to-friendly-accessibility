@@ -44,6 +44,7 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
   const { openToast } = useToast();
   const { keywords, prefixSumMap, upsertMultipleKeywords } = useKeywordsStore();
   const containerRef = useRef<HTMLDivElement>(null);
+  const keywordRefs = useRef<{ [keyword: string]: HTMLDivElement | null }>({});
   const [keywordsCoordinates, setKeywordsCoordinates] = useState<KeywordsCoordinates>({});
   const { announceToScreenReader } = useAnnouncer();
 
@@ -246,6 +247,40 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
     }
   };
 
+  const handleArrowNavigation = (key: string, currentKeyword: string) => {
+    const currentCoord = keywordsCoordinates[currentKeyword];
+    if (!currentCoord) return;
+
+    let closestKeyword = null;
+    let minDistance = Infinity;
+
+    for (const [keyword, coord] of Object.entries(keywordsCoordinates)) {
+      if (keyword === currentKeyword) continue;
+
+      const dx = coord.x - currentCoord.x;
+      const dy = coord.y - currentCoord.y;
+
+      const isValid =
+        (key === 'ArrowRight' && dx > 0 && Math.abs(dy) < 50) ||
+        (key === 'ArrowLeft' && dx < 0 && Math.abs(dy) < 50) ||
+        (key === 'ArrowUp' && dy < 0 && Math.abs(dx) < 50) ||
+        (key === 'ArrowDown' && dy > 0 && Math.abs(dx) < 50);
+
+      if (isValid) {
+        const dist = dx * dx + dy * dy; //두좌표 사이 거리
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestKeyword = keyword;
+        }
+      }
+    }
+
+    if (closestKeyword) {
+      //가장 가까운 키워드에 포커스 호출
+      keywordRefs.current[closestKeyword]?.focus();
+    }
+  };
+
   return (
     <div css={KeywordsViewContainer}>
       <div css={HiddenKeywordsContainer} ref={containerRef}></div>
@@ -273,13 +308,18 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
                   e.preventDefault();
                   selectedKeywords.has(keyword) ? unpickKeyword(keyword) : pickKeyword(keyword);
                 }
+
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                  e.preventDefault();
+                  handleArrowNavigation(e.key, keyword);
+                }
               }}
               style={{
                 left: keywordsCoordinates[keyword].x,
                 top: keywordsCoordinates[keyword].y
               }}
               role="버튼"
-              tabIndex={0}
+              ref={(el) => (keywordRefs.current[keyword] = el)}
               aria-pressed={selectedKeywords.has(keyword)}
               aria-label={`${keywordObject.keyword}, 공감 ${keywordObject.count}회`}
             >
