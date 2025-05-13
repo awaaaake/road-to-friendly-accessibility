@@ -259,7 +259,7 @@ const KeywordsView = memo(({ questionId, selectedKeywords, keywordRefs, updateSe
 
       const dx = coord.x - currentCoord.x;
       const dy = coord.y - currentCoord.y;
-      const THRESHOLD = 50;
+      const THRESHOLD = 100;
 
       const isValid =
         (key === 'ArrowRight' && dx > 0 && Math.abs(dy) < THRESHOLD) ||
@@ -278,7 +278,6 @@ const KeywordsView = memo(({ questionId, selectedKeywords, keywordRefs, updateSe
 
     if (closestKeyword) {
       //가장 가까운 키워드에 포커스 호출
-      console.log(closestKeyword);
       keywordRefs.current[closestKeyword]?.focus();
     }
   };
@@ -296,7 +295,7 @@ const KeywordsView = memo(({ questionId, selectedKeywords, keywordRefs, updateSe
           return (
             <div
               role="button"
-              tabIndex={i + 1}
+              tabIndex={0}
               key={`${questionId}-${keyword}`}
               css={[
                 KeywordStyle,
@@ -315,7 +314,6 @@ const KeywordsView = memo(({ questionId, selectedKeywords, keywordRefs, updateSe
 
                 if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                   e.preventDefault();
-                  console.log(e.key);
                   handleArrowNavigation(e.key, keyword);
                 }
               }}
