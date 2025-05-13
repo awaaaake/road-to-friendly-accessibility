@@ -11,10 +11,11 @@ import { Variables } from '@/styles';
 interface QuestionInputProps {
   currentQuestionIndex: number;
   selectedKeywords: Set<string>;
+  keywordRefs: React.MutableRefObject<{ [keyword: string]: HTMLDivElement | null }>;
   onSubmit: (keyword: string, type: 'add' | 'delete') => void;
 }
 
-const QuestionInput = ({ currentQuestionIndex, selectedKeywords, onSubmit }: QuestionInputProps) => {
+const QuestionInput = ({ currentQuestionIndex, selectedKeywords, keywordRefs, onSubmit }: QuestionInputProps) => {
   const [keyword, setKeyword] = useState('');
   const { openToast } = useToast();
   const { socket } = useSocketStore();
@@ -86,7 +87,15 @@ const QuestionInput = ({ currentQuestionIndex, selectedKeywords, onSubmit }: Que
         css={inputStyle}
         maxLength={MAX_LENGTH}
         onChange={handleInputChange}
-        onKeyDown={(e) => handleEnter(e)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleEnter(e);
+          
+          if (e.key === 'Tab' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const firstKeyword = Object.values(keywordRefs.current)[0];
+            firstKeyword?.focus();
+          }
+        }}
         onFocus={handleFocus}
       />
       <span css={spanStyle}>{keyword.length}/15</span>

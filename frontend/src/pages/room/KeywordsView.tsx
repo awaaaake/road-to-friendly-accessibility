@@ -14,6 +14,7 @@ import { Group, Keyword, KeywordInfo, KeywordsCoordinates, PrefixSum } from '@/t
 interface KeywordsViewProps {
   questionId: number;
   selectedKeywords: Set<string>;
+  keywordRefs:React.MutableRefObject<{[keyword: string] : HTMLDivElement | null}>;
   updateSelectedKeywords: (keyword: string, type: 'add' | 'delete') => void;
 }
 
@@ -39,12 +40,11 @@ function getKeywordGroup(keyword: Keyword, keywordCountSum: number, prefixSum: P
   return 'Tiny';
 }
 
-const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeywords }: KeywordsViewProps) => {
+const KeywordsView = memo(({ questionId, selectedKeywords, keywordRefs, updateSelectedKeywords }: KeywordsViewProps) => {
   const { socket } = useSocketStore();
   const { openToast } = useToast();
   const { keywords, prefixSumMap, upsertMultipleKeywords } = useKeywordsStore();
   const containerRef = useRef<HTMLDivElement>(null);
-  const keywordRefs = useRef<{ [keyword: string]: HTMLDivElement | null }>({});
   const [keywordsCoordinates, setKeywordsCoordinates] = useState<KeywordsCoordinates>({});
   const { announceToScreenReader } = useAnnouncer();
 
@@ -226,7 +226,7 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
       updateSelectedKeywords(keyword, 'add');
       const msg = '키워드에 공감을 표시했어요!';
       openToast({ text: msg, type: 'check' });
-      announceToScreenReader(msg, 'polite');
+      announceToScreenReader(`${keyword} ${msg}`, 'polite');
     } catch (error) {
       if (error instanceof Error) openToast({ text: error.message, type: 'error' });
       announceToScreenReader(error.message, 'assertive');
@@ -240,7 +240,7 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
       updateSelectedKeywords(keyword, 'delete');
       const msg = '키워드 공감을 취소했어요';
       openToast({ text: msg, type: 'check' });
-      announceToScreenReader(msg, 'polite');
+      announceToScreenReader(`${keyword} ${msg}`, 'polite');
     } catch (error) {
       if (error instanceof Error) openToast({ text: error.message, type: 'error' });
       announceToScreenReader(error.message, 'assertive');
@@ -287,17 +287,16 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
     <div css={KeywordsViewContainer}>
       <div css={HiddenKeywordsContainer} ref={containerRef}></div>
       <div
-        tabIndex={0}
         css={RealKeywordsContainer}
         role="region"
         aria-label="워드 클라우드 영역, 키워드를 선택해 공감할 수 있습니다"
       >
-        {Object.keys(keywordsCoordinates).map((keyword) => {
+        {Object.keys(keywordsCoordinates).map((keyword, i) => {
           const keywordObject: Keyword = { keyword, count: keywordsCoordinates[keyword].count };
           return (
             <div
               role="button"
-              tabIndex={0}
+              tabIndex={i + 1}
               key={`${questionId}-${keyword}`}
               css={[
                 KeywordStyle,
@@ -325,7 +324,6 @@ const KeywordsView = memo(({ questionId, selectedKeywords, updateSelectedKeyword
                 top: keywordsCoordinates[keyword].y
               }}
               ref={(el) => (keywordRefs.current[keyword] = el)}
-              aria-pressed={selectedKeywords.has(keyword)}
               aria-label={`${keywordObject.keyword}, 공감 ${keywordObject.count}회`}
             >
               {keywordObject.keyword}

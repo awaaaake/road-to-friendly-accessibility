@@ -43,6 +43,7 @@ const QuestionsView = ({
   const [isQuestionMovedUp, setIsQuestionMovedUp] = useState(false);
   const [showInput, setShowInput] = useState(false);
   const resultResponseRef = useRef<CommonResult | null>(null);
+  const keywordRefs = useRef<{ [keyword: string]: HTMLDivElement | null }>({});
 
   const [selectedKeywords, setSelectedKeywords] = useState<Set<string>>(new Set());
 
@@ -208,6 +209,7 @@ const QuestionsView = ({
               <QuestionInput
                 currentQuestionIndex={currentQuestionIndex}
                 selectedKeywords={selectedKeywords}
+                keywordRefs={keywordRefs}
                 onSubmit={updateSelectedKeywords}
               />
               <div css={progressWrapperStyle}>
@@ -230,6 +232,7 @@ const QuestionsView = ({
         <KeywordsView
           questionId={questions[currentQuestionIndex].questionId}
           selectedKeywords={selectedKeywords}
+          keywordRefs={keywordRefs}
           updateSelectedKeywords={updateSelectedKeywords}
         />
       </div>
